@@ -4,8 +4,8 @@ const userModel = require("./users");
 const passport = require("passport");
 
 const localStrategy = require("passport-local");
-// passport.use(new localStrategy(userModel.authenticate()));
-passport.use(new localStrategy(userModel.authenticate()));
+const { model } = require("mongoose");
+passport.use(new localStrategy(userModel));
 /* GET home page. */
 // router.get("/", function (req, res) {
 //   res.cookie("age", 27);
@@ -70,10 +70,44 @@ passport.use(new localStrategy(userModel.authenticate()));
 //   });
 //   res.send(user);
 // });
-router.get('/'),function(req, res){
-  res.render('index')
-};
-router.post('/register', function(req, res){
-  
-})
+router.get("/"),
+  function (req, res) {
+    res.render("index");
+  };
+router.post("/profile",isLoggedIn, function (req, res) {
+  res.send("welcome to profile");
+});
+router.post("/register", function (req, res) {
+  var userData = new userModel({
+    username: String,
+    secret: String,
+  });
+  userModel
+    .register(username, req.body.passport)
+    .then(function (registereduser) {
+      passport.authenticate("local")(req, res, function () {
+        res.redirect("/profile");
+      });
+    });
+  router.post(
+    "/login",
+    passport.authenticate("local", {
+      successRedirect: "/profile",
+      failureRedirect: "/",
+    }),
+    function (req, res) {}
+  );
+  router.get("/logout", function (req, res, nect) {
+    req.logOut(function (err) {
+      if (err) return err;
+      res.redirect("/");
+    });
+  });
+  function isLoggedIn(req, res, next){
+    if(req.isAuthenticated()){
+      return next();
+    }
+    res.redirect('/');
+  }
+});
 module.exports = router;
